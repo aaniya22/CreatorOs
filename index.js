@@ -18,6 +18,7 @@ const protect = require("./middleware/auth");
 
 const path = require('path');
 const fs = require('fs');
+app.use(express.static(path.join(__dirname, 'public')));
 const shortid = require('shortid');
 const multer = require('multer');
 const services = require('./services.config');
@@ -190,8 +191,8 @@ app.get('/u/:shortId', async (req, res) => {
     }
 });
 
-// app.listen(port, () => {
-//     console.log(`Server is running on http://localhost:${port}`);
-// });
+app.listen(port, () => {
+    console.log(`Server is running on http://localhost:${port}`);
+});
 
 module.exports = app;

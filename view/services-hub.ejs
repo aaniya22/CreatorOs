@@ -1,612 +1,1126 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CreatorOS Service Hub</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700;800&display=swap" rel="stylesheet">
-    <style>
-        :root {
-            --bg: #06101f;
-            --bg-2: #0b1730;
-            --panel: rgba(13, 24, 49, 0.68);
-            --border: rgba(148, 163, 184, 0.16);
-            --text: #f8fafc;
-            --muted: #cbd5e1;
-            --accent: #22d3ee;
-            --accent-2: #38bdf8;
-            --available: #22c55e;
-            --soon: #f59e0b;
-        }
-
-        * { box-sizing: border-box; }
-
-        html {
-            scroll-behavior: smooth;
-        }
-
-        body {
-            margin: 0;
-            min-height: 100vh;
-            font-family: 'Poppins', sans-serif;
-            color: var(--text);
-            background:
-                radial-gradient(900px 320px at 50% -80px, rgba(56, 189, 248, 0.24), transparent 70%),
-                radial-gradient(720px 260px at 85% 0%, rgba(34, 211, 238, 0.18), transparent 70%),
-                linear-gradient(180deg, var(--bg-2), var(--bg));
-            overflow-x: hidden;
-        }
-
-        .page-shell {
-            position: relative;
-            isolation: isolate;
-            min-height: 100vh;
-        }
-
-        .page-shell::before,
-        .page-shell::after {
-            content: '';
-            position: fixed;
-            border-radius: 999px;
-            filter: blur(20px);
-            opacity: 0.18;
-            pointer-events: none;
-            z-index: -1;
-            animation: drift 11s ease-in-out infinite;
-        }
-
-        .page-shell::before {
-            top: 8rem;
-            left: -4rem;
-            width: 16rem;
-            height: 16rem;
-            background: #0ea5e9;
-        }
-
-        .page-shell::after {
-            top: 20rem;
-            right: -5rem;
-            width: 18rem;
-            height: 18rem;
-            background: #22d3ee;
-            animation-delay: 2.4s;
-        }
-
-        .container {
-            width: min(1180px, 100%);
-            margin: 0 auto;
-            padding: 0 1rem;
-        }
-
-        .glass-card {
-            background: var(--panel);
-            border: 1px solid var(--border);
-            backdrop-filter: blur(18px);
-            box-shadow: 0 24px 50px rgba(0, 0, 0, 0.28);
-        }
-
-        .topbar {
-            padding: 1.25rem 0 0;
-        }
-
-        .topbar-inner {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 1rem;
-            padding: 0.95rem 1.2rem;
-            border-radius: 999px;
-        }
-
-        .brand {
-            display: flex;
-            align-items: center;
-            gap: 0.8rem;
-            text-decoration: none;
-            color: var(--text);
-        }
-
-        .brand-mark {
-            width: 2.4rem;
-            height: 2.4rem;
-            border-radius: 0.9rem;
-            background: linear-gradient(135deg, #67e8f9, var(--accent-2));
-            box-shadow: 0 10px 30px rgba(34, 211, 238, 0.28);
-            display: grid;
-            place-items: center;
-            color: #082f49;
-            font-weight: 800;
-        }
-
-        .brand-copy {
-            line-height: 1.05;
-        }
-
-        .brand-copy strong {
-            display: block;
-            font-size: 1rem;
-        }
-
-        .brand-copy span {
-            display: block;
-            margin-top: 0.2rem;
-            font-size: 0.8rem;
-            color: var(--muted);
-        }
-
-        .nav-links {
-            display: flex;
-            align-items: center;
-            gap: 1.4rem;
-            flex-wrap: wrap;
-            justify-content: flex-end;
-        }
-
-        .nav-links a {
-            color: var(--muted);
-            text-decoration: none;
-            font-size: 0.95rem;
-            transition: color 0.2s ease, transform 0.2s ease;
-        }
-
-        .nav-links a:hover {
-            color: #fff;
-            transform: translateY(-1px);
-        }
-
-        .hero {
-            position: relative;
-            padding: 4.5rem 0 3rem;
-        }
-
-        .hero-grid {
-            display: grid;
-            grid-template-columns: minmax(0, 1.25fr) minmax(280px, 0.75fr);
-            gap: 1.25rem;
-            align-items: stretch;
-        }
-
-        .hero-panel,
-        .stats-panel {
-            border-radius: 28px;
-        }
-
-        .hero-panel {
-            position: relative;
-            overflow: hidden;
-            padding: clamp(1.5rem, 3vw, 2.5rem);
-        }
-
-        .hero-panel::before {
-            content: '';
-            position: absolute;
-            inset: 1.2rem;
-            border-radius: 24px;
-            border: 1px solid rgba(255, 255, 255, 0.05);
-            pointer-events: none;
-        }
-
-        .hero-kicker {
-            display: inline-flex;
-            align-items: center;
-            gap: 0.55rem;
-            padding: 0.45rem 0.8rem;
-            border-radius: 999px;
-            background: rgba(34, 211, 238, 0.1);
-            color: #c9f7ff;
-            font-size: 0.82rem;
-            font-weight: 600;
-            letter-spacing: 0.02em;
-            margin-bottom: 1rem;
-        }
-
-        .hero-kicker-dot {
-            width: 0.5rem;
-            height: 0.5rem;
-            border-radius: 999px;
-            background: #67e8f9;
-            box-shadow: 0 0 0 6px rgba(103, 232, 249, 0.14);
-        }
-
-        .hero h1 {
-            margin: 0;
-            font-size: clamp(2.6rem, 6vw, 4.6rem);
-            line-height: 0.98;
-            letter-spacing: -0.04em;
-            max-width: 12ch;
-        }
-
-        .hero h1 span {
-            color: #67e8f9;
-        }
-
-        .hero p {
-            margin: 1.1rem 0 0;
-            max-width: 58ch;
-            color: var(--muted);
-            font-size: 1.04rem;
-            line-height: 1.7;
-        }
-
-        .hero-actions {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 0.8rem;
-            margin-top: 1.5rem;
-        }
-
-        .action-btn {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            gap: 0.5rem;
-            border-radius: 999px;
-            padding: 0.9rem 1.2rem;
-            text-decoration: none;
-            font-weight: 700;
-            transition: transform 0.2s ease, filter 0.2s ease, border-color 0.2s ease;
-        }
-
-        .action-btn.primary {
-            color: #042f3e;
-            background: linear-gradient(135deg, #67e8f9, var(--accent-2));
-            box-shadow: 0 16px 32px rgba(34, 211, 238, 0.2);
-        }
-
-        .action-btn.secondary {
-            color: var(--text);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            background: rgba(255, 255, 255, 0.04);
-        }
-
-        .action-btn:hover {
-            transform: translateY(-2px);
-            filter: brightness(1.02);
-        }
-
-        .stats-panel {
-            padding: 1.2rem;
-            display: grid;
-            gap: 1rem;
-            align-content: center;
-        }
-
-        .stats-panel .mini-card {
-            border-radius: 22px;
-            padding: 1rem 1rem 1.05rem;
-            background: linear-gradient(180deg, rgba(15, 26, 51, 0.9), rgba(8, 15, 31, 0.85));
-            border: 1px solid rgba(255, 255, 255, 0.06);
-        }
-
-        .mini-label {
-            margin: 0;
-            font-size: 0.8rem;
-            text-transform: uppercase;
-            letter-spacing: 0.16em;
-            color: #7dd3fc;
-        }
-
-        .mini-value {
-            margin: 0.45rem 0 0;
-            font-size: 2rem;
-            font-weight: 800;
-            line-height: 1;
-        }
-
-        .mini-note {
-            margin: 0.45rem 0 0;
-            color: var(--muted);
-            font-size: 0.92rem;
-            line-height: 1.5;
-        }
-
-        .section {
-            padding: 1rem 0 4rem;
-        }
-
-        .section-heading {
-            margin: 0 0 1.2rem;
-        }
-
-        .section-heading h2 {
-            margin: 0;
-            font-size: clamp(2rem, 4vw, 3rem);
-            letter-spacing: -0.03em;
-        }
-
-        .section-heading p {
-            margin: 0.55rem 0 0;
-            color: var(--muted);
-            max-width: 100ch;
-            line-height: 1.7;
-        }
-
-        .grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 1rem;
-        }
-
-        .service-card {
-            position: relative;
-            overflow: hidden;
-            border-radius: 24px;
-            padding: 1.15rem;
-            min-height: 230px;
-            display: flex;
-            flex-direction: column;
-            gap: 0.75rem;
-            opacity: 1;
-            transform: none;
-        }
-
-        .service-card::after {
-            content: '';
-            position: absolute;
-            inset: auto -20% -45% auto;
-            width: 10rem;
-            height: 10rem;
-            border-radius: 999px;
-            background: radial-gradient(circle, rgba(103, 232, 249, 0.18), transparent 68%);
-            pointer-events: none;
-        }
-
-        .service-card:hover {
-            border-color: rgba(103, 232, 249, 0.34);
-        }
-
-        .service-card.available {
-            background: linear-gradient(180deg, rgba(8, 24, 41, 0.94), rgba(9, 16, 34, 0.9));
-        }
-
-        .service-card.coming_soon {
-            background: linear-gradient(180deg, rgba(10, 18, 38, 0.9), rgba(8, 14, 29, 0.88));
-        }
-
-        .badge {
-            align-self: flex-start;
-            display: inline-flex;
-            align-items: center;
-            gap: 0.35rem;
-            border-radius: 999px;
-            padding: 0.32rem 0.72rem;
-            font-size: 0.74rem;
-            font-weight: 800;
-            letter-spacing: 0.04em;
-            text-transform: uppercase;
-        }
-
-        .badge::before {
-            content: '';
-            width: 0.42rem;
-            height: 0.42rem;
-            border-radius: 999px;
-            background: currentColor;
-            box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.08);
-        }
-
-        .badge.available {
-            color: #052e16;
-            background: linear-gradient(135deg, #86efac, var(--available));
-        }
-
-        .badge.coming_soon {
-            color: #451a03;
-            background: linear-gradient(135deg, #fcd34d, var(--soon));
-        }
-
-        .service-card h3 {
-            margin: 0;
-            font-size: 1.35rem;
-            line-height: 1.15;
-        }
-
-        .service-card p {
-            margin: 0;
-            color: var(--muted);
-            line-height: 1.65;
-            flex: 1;
-        }
-
-        .service-link {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            gap: 0.45rem;
-            border-radius: 999px;
-            padding: 0.76rem 0.95rem;
-            text-decoration: none;
-            font-weight: 700;
-            transition: transform 0.2s ease, filter 0.2s ease;
-            flex-shrink: 0;
-        }
-
-        .service-link.available {
-            color: #042f3e;
-            background: linear-gradient(135deg, #67e8f9, var(--accent-2));
-        }
-
-        .service-link.coming_soon {
-            color: #fef3c7;
-            border: 1px dashed rgba(251, 191, 36, 0.55);
-            background: rgba(245, 158, 11, 0.08);
-        }
-
-        .service-link:hover {
-            transform: translateY(-2px);
-            filter: brightness(1.02);
-        }
-
-        .footer {
-            padding: 0 0 2rem;
-            color: var(--muted);
-            text-align: center;
-            font-size: 0.95rem;
-        }
-
-        @keyframes drift {
-            0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
-            50% { transform: translate3d(0, -18px, 0) scale(1.05); }
-        }
-
-        @keyframes floatSoft {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-8px); }
-        }
-
-        @media (prefers-reduced-motion: reduce) {
-            html { scroll-behavior: auto; }
-
-            .page-shell::before,
-            .page-shell::after {
-                animation: none;
-            }
-
-            .service-card {
-                opacity: 1;
-                transform: none;
-            }
-        }
-
-        @media (max-width: 900px) {
-            .hero-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .stats-panel {
-                grid-template-columns: repeat(2, minmax(0, 1fr));
-            }
-        }
-
-        @media (max-width: 720px) {
-            .topbar-inner {
-                border-radius: 28px;
-                padding: 1rem;
-                flex-direction: column;
-                align-items: flex-start;
-            }
-
-            .nav-links {
-                justify-content: flex-start;
-                gap: 1rem;
-            }
-
-            .hero {
-                padding-top: 2.8rem;
-            }
-
-            .hero-panel,
-            .stats-panel {
-                border-radius: 24px;
-            }
-
-            .stats-panel {
-                grid-template-columns: 1fr;
-            }
-
-            .service-card {
-                min-height: 210px;
-            }
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CreatorOS — Unified Platform</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #020510;
+      --bg2: #070d1f;
+      --glass: rgba(8, 16, 38, 0.55);
+      --glass2: rgba(12, 24, 52, 0.7);
+      --border: rgba(99, 179, 237, 0.12);
+      --border-lit: rgba(99, 179, 237, 0.4);
+      --text: #e8f4ff;
+      --muted: #7fa8c9;
+      --dim: #3d5a74;
+      --cyan: #22d3ee;
+      --blue: #60a5fa;
+      --indigo: #818cf8;
+      --glow-c: rgba(34, 211, 238, 0.18);
+      --glow-b: rgba(96, 165, 250, 0.12);
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* ── MESH BACKGROUND ── */
+    .mesh-bg {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+      overflow: hidden;
+    }
+    .mesh-bg::before {
+      content: '';
+      position: absolute;
+      width: 900px; height: 900px;
+      left: -200px; top: -200px;
+      background: radial-gradient(ellipse, rgba(34,211,238,0.09) 0%, transparent 65%);
+      border-radius: 50%;
+      animation: meshDrift1 18s ease-in-out infinite;
+    }
+    .mesh-bg::after {
+      content: '';
+      position: absolute;
+      width: 700px; height: 700px;
+      right: -150px; top: 30%;
+      background: radial-gradient(ellipse, rgba(96,165,250,0.08) 0%, transparent 65%);
+      border-radius: 50%;
+      animation: meshDrift2 22s ease-in-out infinite;
+    }
+    .mesh-blob3 {
+      position: absolute;
+      width: 500px; height: 500px;
+      left: 40%; bottom: -100px;
+      background: radial-gradient(ellipse, rgba(129,140,248,0.06) 0%, transparent 65%);
+      border-radius: 50%;
+      animation: meshDrift3 15s ease-in-out infinite;
+    }
+    @keyframes meshDrift1 { 0%,100%{transform:translate(0,0) scale(1)} 50%{transform:translate(60px,-40px) scale(1.07)} }
+    @keyframes meshDrift2 { 0%,100%{transform:translate(0,0) scale(1)} 50%{transform:translate(-50px,60px) scale(1.05)} }
+    @keyframes meshDrift3 { 0%,100%{transform:translate(0,0) scale(1)} 50%{transform:translate(30px,-60px) scale(1.08)} }
+
+    /* ── GRID OVERLAY ── */
+    .grid-overlay {
+      position: fixed; inset: 0; pointer-events: none; z-index: 0;
+      background-image:
+        linear-gradient(rgba(99,179,237,0.025) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(99,179,237,0.025) 1px, transparent 1px);
+      background-size: 48px 48px;
+    }
+
+    /* ── WRAPPER ── */
+    .page { position: relative; z-index: 1; }
+    .container { width: min(1200px, 100%); margin: 0 auto; padding: 0 2rem; }
+
+    /* ── NAVBAR ── */
+    nav {
+      padding: 1.5rem 0;
+      position: sticky; top: 0; z-index: 100;
+    }
+    .nav-inner {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0.85rem 1.75rem;
+      background: rgba(2, 5, 16, 0.7);
+      backdrop-filter: blur(24px) saturate(1.5);
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      box-shadow: 0 4px 40px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.04);
+    }
+    .brand {
+      display: flex; align-items: center; gap: 0.9rem;
+      text-decoration: none; color: var(--text);
+    }
+    .brand-orb {
+      width: 2.6rem; height: 2.6rem; border-radius: 12px;
+      background: linear-gradient(135deg, #22d3ee 0%, #6366f1 100%);
+      display: grid; place-items: center;
+      font-family: 'Inter', sans-serif;
+      font-weight: 800; font-size: 1.1rem; color: #fff;
+      box-shadow: 0 0 20px rgba(34,211,238,0.35), 0 0 40px rgba(34,211,238,0.12);
+      position: relative;
+      animation: orbPulse 3s ease-in-out infinite;
+    }
+    @keyframes orbPulse {
+      0%,100%{box-shadow:0 0 20px rgba(34,211,238,0.35),0 0 40px rgba(34,211,238,0.12)}
+      50%{box-shadow:0 0 28px rgba(34,211,238,0.55),0 0 55px rgba(34,211,238,0.2)}
+    }
+    .brand-text strong {
+      display: block; font-family: 'Inter', sans-serif;
+      font-size: 1rem; font-weight: 700; letter-spacing: -0.02em;
+    }
+    .brand-text span {
+      display: block; font-size: 0.72rem; color: var(--muted); font-weight: 400;
+      letter-spacing: 0.04em; text-transform: uppercase;
+    }
+    .nav-links { display: flex; align-items: center; gap: 2rem; }
+    .nav-links a {
+      color: var(--muted); text-decoration: none; font-size: 0.88rem;
+      font-weight: 500; letter-spacing: 0.01em;
+      transition: color 0.2s;
+    }
+    .nav-links a:hover { color: var(--text); }
+    .btn-signin {
+      padding: 0.55rem 1.3rem;
+      background: transparent;
+      border: 1px solid rgba(34,211,238,0.35);
+      border-radius: 999px;
+      color: var(--cyan); font-size: 0.82rem; font-weight: 600;
+      text-decoration: none;
+      transition: all 0.25s;
+      letter-spacing: 0.03em;
+    }
+    .btn-signin:hover {
+      background: rgba(34,211,238,0.08);
+      border-color: var(--cyan);
+      box-shadow: 0 0 16px rgba(34,211,238,0.2);
+    }
+
+    /* ── HERO ── */
+    .hero {
+      padding: 1rem 0 4rem;
+    }
+    .hero-grid {
+      display: grid;
+      grid-template-columns: 1.2fr 0.8fr;
+      gap: 1.5rem;
+      align-items: stretch;
+    }
+
+    /* Hero left panel */
+    .hero-panel {
+      padding: 3.5rem;
+      border-radius: 28px;
+      background: var(--glass);
+      border: 1px solid var(--border);
+      backdrop-filter: blur(24px);
+      position: relative;
+      overflow: hidden;
+      transform-style: preserve-3d;
+      transition: transform 0.6s cubic-bezier(0.23,1,0.32,1), box-shadow 0.6s;
+      box-shadow:
+        0 30px 60px rgba(0,0,0,0.5),
+        0 0 0 1px rgba(255,255,255,0.04) inset,
+        0 1px 0 rgba(255,255,255,0.08) inset;
+    }
+    .hero-panel::before {
+      content: '';
+      position: absolute; inset: 0;
+      background: radial-gradient(600px at 0% 0%, rgba(34,211,238,0.06), transparent 60%);
+      pointer-events: none;
+    }
+    .hero-panel::after {
+      content: '';
+      position: absolute;
+      top: -1px; left: 5%; right: 5%;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(34,211,238,0.5), transparent);
+    }
+
+    .kicker {
+      display: inline-flex; align-items: center; gap: 0.6rem;
+      padding: 0.4rem 1rem; border-radius: 999px;
+      background: rgba(34,211,238,0.07);
+      border: 1px solid rgba(34,211,238,0.2);
+      font-size: 0.75rem; font-weight: 600; letter-spacing: 0.08em;
+      text-transform: uppercase; color: var(--cyan);
+      margin-bottom: 2rem;
+    }
+    .kicker-dot {
+      width: 6px; height: 6px; border-radius: 50%;
+      background: var(--cyan);
+      box-shadow: 0 0 8px var(--cyan);
+      animation: blink 1.5s ease-in-out infinite;
+    }
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+    .hero-panel h1 {
+      font-family: 'Inter', sans-serif;
+      font-size: clamp(2.4rem, 4vw, 3.2rem);
+      font-weight: 800;
+      line-height: 1.1;
+      letter-spacing: -0.04em;
+      color: #fff;
+      margin-bottom: 1.25rem;
+    }
+    .hero-panel h1 .gradient-text {
+      background: linear-gradient(135deg, #22d3ee 0%, #818cf8 50%, #60a5fa 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .hero-panel p {
+      color: var(--muted); line-height: 1.7; font-size: 1rem;
+      max-width: 42ch; margin-bottom: 2.5rem; font-weight: 300;
+    }
+    .hero-actions { display: flex; gap: 1rem; flex-wrap: wrap; }
+
+    .btn-primary {
+      display: inline-flex; align-items: center; gap: 0.5rem;
+      padding: 0.9rem 1.8rem; border-radius: 999px;
+      background: linear-gradient(135deg, #22d3ee, #6366f1);
+      color: #fff; font-weight: 600; font-size: 0.92rem;
+      text-decoration: none; letter-spacing: 0.01em;
+      box-shadow: 0 8px 24px rgba(34,211,238,0.25), 0 2px 4px rgba(0,0,0,0.3);
+      transition: all 0.3s cubic-bezier(0.23,1,0.32,1);
+      position: relative; overflow: hidden;
+    }
+    .btn-primary::before {
+      content: '';
+      position: absolute; inset: 0;
+      background: linear-gradient(135deg, rgba(255,255,255,0.15), transparent);
+      opacity: 0; transition: opacity 0.3s;
+    }
+    .btn-primary:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 16px 36px rgba(34,211,238,0.38), 0 4px 8px rgba(0,0,0,0.3);
+    }
+    .btn-primary:hover::before { opacity: 1; }
+
+    .btn-secondary {
+      display: inline-flex; align-items: center; gap: 0.5rem;
+      padding: 0.9rem 1.8rem; border-radius: 999px;
+      border: 1px solid rgba(255,255,255,0.1);
+      color: rgba(255,255,255,0.75); font-weight: 500; font-size: 0.92rem;
+      text-decoration: none; background: rgba(255,255,255,0.03);
+      transition: all 0.3s;
+    }
+    .btn-secondary:hover {
+      transform: translateY(-2px);
+      border-color: rgba(255,255,255,0.22);
+      background: rgba(255,255,255,0.07);
+      color: #fff;
+    }
+
+    /* ── ECOSYSTEM PANEL (3D Cards) ── */
+    .ecosystem-panel {
+      border-radius: 28px;
+      background: rgba(4, 10, 25, 0.6);
+      border: 1px solid var(--border);
+      backdrop-filter: blur(20px);
+      position: relative;
+      overflow: hidden;
+      min-height: 420px;
+      box-shadow:
+        0 30px 60px rgba(0,0,0,0.5),
+        0 0 0 1px rgba(255,255,255,0.03) inset;
+    }
+    .ecosystem-panel::after {
+      content: '';
+      position: absolute;
+      top: -1px; left: 10%; right: 10%;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(96,165,250,0.4), transparent);
+    }
+    .eco-grid {
+      position: absolute; inset: 0;
+      background-image:
+        linear-gradient(rgba(99,179,237,0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(99,179,237,0.03) 1px, transparent 1px);
+      background-size: 32px 32px;
+    }
+    .eco-glow {
+      position: absolute;
+      top: 30%; left: 30%;
+      width: 300px; height: 300px;
+      background: radial-gradient(circle, rgba(34,211,238,0.05), transparent 70%);
+      pointer-events: none;
+    }
+
+    /* 3D floating cards */
+    .card-stack {
+      position: absolute; inset: 0;
+      display: flex; align-items: center; justify-content: center;
+      perspective: 800px;
+    }
+    .fc {
+      position: absolute;
+      border-radius: 14px;
+      padding: 14px 18px;
+      display: flex; align-items: center; gap: 12px;
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255,255,255,0.08);
+      box-shadow: 0 12px 32px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.07);
+      cursor: default; user-select: none;
+      transition: transform 0.35s cubic-bezier(0.23,1,0.32,1), box-shadow 0.35s;
+      transform-origin: center;
+    }
+    .fc:hover {
+      box-shadow: 0 20px 50px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.1);
+      z-index: 20 !important;
+    }
+    .fc-icon {
+      width: 36px; height: 36px; border-radius: 10px;
+      display: grid; place-items: center; flex-shrink: 0;
+    }
+    .fc-icon svg { width: 18px; height: 18px; }
+    .fc-name { font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 700; color: #fff; white-space: nowrap; }
+    .fc-tag {
+      font-size: 9px; font-weight: 700; letter-spacing: 0.1em;
+      text-transform: uppercase; padding: 2px 7px; border-radius: 999px;
+    }
+    .live { background: rgba(34,211,238,0.12); border: 1px solid rgba(34,211,238,0.25); color: var(--cyan); }
+    .soon { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); color: var(--dim); }
+
+    /* individual cards with 3D tilt positions */
+    .fc-1 {
+      background: linear-gradient(135deg, rgba(6,182,212,0.2), rgba(6,182,212,0.06));
+      top: 10%; left: 6%;
+      transform: rotateX(8deg) rotateY(-10deg) translateZ(0px);
+      animation: float1 6s ease-in-out infinite;
+      width: 200px;
+    }
+    .fc-2 {
+      background: linear-gradient(135deg, rgba(99,102,241,0.2), rgba(99,102,241,0.06));
+      top: 18%; right: 6%;
+      transform: rotateX(6deg) rotateY(12deg) translateZ(20px);
+      animation: float2 7.5s ease-in-out infinite;
+      width: 195px;
+    }
+    .fc-3 {
+      background: linear-gradient(135deg, rgba(16,185,129,0.2), rgba(16,185,129,0.06));
+      top: 44%; left: 4%;
+      transform: rotateX(-4deg) rotateY(-8deg) translateZ(10px);
+      animation: float3 5.5s ease-in-out infinite;
+      width: 190px;
+    }
+    .fc-4 {
+      background: linear-gradient(135deg, rgba(245,158,11,0.18), rgba(245,158,11,0.05));
+      top: 46%; right: 7%;
+      transform: rotateX(-6deg) rotateY(10deg) translateZ(5px);
+      animation: float4 8s ease-in-out infinite;
+      width: 190px;
+    }
+    .fc-5 {
+      background: linear-gradient(135deg, rgba(239,68,68,0.18), rgba(239,68,68,0.05));
+      bottom: 12%; left: 12%;
+      transform: rotateX(5deg) rotateY(-6deg) translateZ(15px);
+      animation: float5 6.8s ease-in-out infinite;
+      width: 195px;
+    }
+    .fc-6 {
+      background: linear-gradient(135deg, rgba(168,85,247,0.18), rgba(168,85,247,0.05));
+      bottom: 10%; right: 5%;
+      transform: rotateX(7deg) rotateY(8deg) translateZ(0px);
+      animation: float6 7s ease-in-out infinite;
+      width: 190px;
+    }
+
+    @keyframes float1 { 0%,100%{transform:rotateX(8deg) rotateY(-10deg) translateZ(0px) translateY(0)} 50%{transform:rotateX(10deg) rotateY(-12deg) translateZ(8px) translateY(-10px)} }
+    @keyframes float2 { 0%,100%{transform:rotateX(6deg) rotateY(12deg) translateZ(20px) translateY(0)} 50%{transform:rotateX(8deg) rotateY(14deg) translateZ(28px) translateY(-14px)} }
+    @keyframes float3 { 0%,100%{transform:rotateX(-4deg) rotateY(-8deg) translateZ(10px) translateY(0)} 50%{transform:rotateX(-6deg) rotateY(-10deg) translateZ(18px) translateY(-8px)} }
+    @keyframes float4 { 0%,100%{transform:rotateX(-6deg) rotateY(10deg) translateZ(5px) translateY(0)} 50%{transform:rotateX(-8deg) rotateY(12deg) translateZ(12px) translateY(-12px)} }
+    @keyframes float5 { 0%,100%{transform:rotateX(5deg) rotateY(-6deg) translateZ(15px) translateY(0)} 50%{transform:rotateX(7deg) rotateY(-8deg) translateZ(22px) translateY(-9px)} }
+    @keyframes float6 { 0%,100%{transform:rotateX(7deg) rotateY(8deg) translateZ(0px) translateY(0)} 50%{transform:rotateX(9deg) rotateY(10deg) translateZ(8px) translateY(-11px)} }
+
+    /* ── SECTION HEADER ── */
+    .section { padding: 5rem 0; }
+    .section-eyebrow {
+      display: flex; align-items: center; gap: 0.6rem; margin-bottom: 0.75rem;
+    }
+    .eyebrow-dot {
+      width: 8px; height: 8px; border-radius: 50%; background: var(--cyan);
+      box-shadow: 0 0 8px var(--cyan); animation: blink 1.5s ease-in-out infinite;
+    }
+    .eyebrow-text {
+      font-size: 0.72rem; font-weight: 700; letter-spacing: 0.12em;
+      text-transform: uppercase; color: var(--cyan);
+    }
+    .section-header {
+      display: flex; align-items: flex-end; justify-content: space-between;
+      gap: 2rem; flex-wrap: wrap;
+      padding-bottom: 2.5rem;
+      border-bottom: 1px solid rgba(99,179,237,0.08);
+      margin-bottom: 3rem;
+    }
+    .section-header h2 {
+      font-family: 'Inter', sans-serif;
+      font-size: clamp(2rem, 3.5vw, 2.6rem);
+      font-weight: 800; letter-spacing: -0.04em; color: #fff;
+      line-height: 1.1;
+    }
+    .section-header p {
+      color: var(--muted); font-size: 0.95rem; font-weight: 300;
+      max-width: 38ch; line-height: 1.65;
+    }
+
+    /* ── TAB SWITCHER ── */
+    .tab-bar {
+      display: flex; gap: 4px; padding: 5px;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 999px;
+      box-shadow: inset 0 2px 8px rgba(0,0,0,0.3);
+    }
+    .tab-btn {
+      padding: 0.55rem 1.25rem;
+      border-radius: 999px; border: none;
+      font-size: 0.78rem; font-weight: 700;
+      letter-spacing: 0.05em; text-transform: uppercase;
+      cursor: pointer; transition: all 0.25s;
+      color: var(--dim); background: transparent;
+    }
+    .tab-btn.active {
+      background: linear-gradient(135deg, #22d3ee, #6366f1);
+      color: #fff;
+      box-shadow: 0 4px 16px rgba(34,211,238,0.3);
+    }
+    .tab-btn:hover:not(.active) { color: var(--text); }
+
+    /* ── SERVICE GRID ── */
+    .services-grid {
+      display: grid;
+      grid-template-columns: repeat(6, minmax(0, 1fr));
+      gap: 1.25rem;
+    }
+    .services-grid > .scard {
+      grid-column: span 2;
+    }
+    .services-grid > .scard.coming_soon:nth-of-type(4) { grid-column: 1 / span 2; }
+    .services-grid > .scard.coming_soon:nth-of-type(5) { grid-column: 3 / span 2; }
+    .services-grid > .scard.coming_soon:nth-of-type(6) { grid-column: 5 / span 2; }
+    .services-grid > .scard.coming_soon:nth-of-type(7) { grid-column: 2 / span 2; }
+    .services-grid > .scard.coming_soon:nth-of-type(8) { grid-column: 4 / span 2; }
+    .services-grid > .scard.coming_soon:nth-of-type(9) { grid-column: 3 / span 2; }
+
+    /* ── SERVICE CARD (3D) ── */
+    .scard {
+      border-radius: 22px;
+      padding: 2rem;
+      position: relative; overflow: hidden;
+      display: flex; flex-direction: column; gap: 0.9rem;
+      transform-style: preserve-3d;
+      perspective: 600px;
+      transition: transform 0.5s cubic-bezier(0.23,1,0.32,1), box-shadow 0.5s;
+      cursor: default;
+    }
+    .scard.available {
+      background: linear-gradient(160deg, rgba(12,24,52,0.7) 0%, rgba(5,12,28,0.8) 100%);
+      border: 1px solid rgba(34,211,238,0.12);
+      box-shadow: 0 16px 40px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.05);
+    }
+    .scard.available:hover {
+      transform: translateY(-8px) rotateX(4deg);
+      border-color: rgba(34,211,238,0.35);
+      box-shadow: 0 28px 60px rgba(0,0,0,0.5), 0 0 0 1px rgba(34,211,238,0.2), 0 -8px 32px rgba(34,211,238,0.08) inset;
+    }
+    .scard.coming_soon {
+      background: linear-gradient(160deg, rgba(8,15,35,0.5) 0%, rgba(4,8,20,0.6) 100%);
+      border: 1px solid rgba(255,255,255,0.05);
+      box-shadow: 0 12px 30px rgba(0,0,0,0.3);
+      opacity: 0.7;
+      cursor: pointer;
+    }
+    .scard.coming_soon:hover { opacity: 0.9; transform: translateY(-4px); }
+    .scard.coming_soon.expanded {
+      opacity: 1;
+      border-color: rgba(34,211,238,0.28);
+      box-shadow: 0 18px 44px rgba(0,0,0,0.45), 0 0 0 1px rgba(34,211,238,0.12), inset 0 1px 0 rgba(255,255,255,0.06);
+    }
+
+    /* top edge glow line */
+    .scard.available::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 10%; right: 10%; height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(34,211,238,0.5), transparent);
+    }
+    /* corner accent */
+    .scard.available::after {
+      content: '';
+      position: absolute;
+      top: 0; right: 0;
+      width: 80px; height: 80px;
+      background: radial-gradient(circle at top right, rgba(34,211,238,0.07), transparent 70%);
+    }
+
+    .card-top {
+      display: flex; justify-content: space-between; align-items: flex-start;
+    }
+    .icon-box {
+      width: 48px; height: 48px; border-radius: 14px;
+      display: grid; place-items: center;
+      transition: transform 0.35s cubic-bezier(0.23,1,0.32,1);
+    }
+    .scard.available .icon-box {
+      background: rgba(34,211,238,0.07);
+      border: 1px solid rgba(34,211,238,0.18);
+      color: var(--cyan);
+      box-shadow: 0 4px 16px rgba(34,211,238,0.08);
+    }
+    .scard.coming_soon .icon-box {
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.06);
+      color: var(--dim);
+    }
+    .scard:hover .icon-box { transform: scale(1.1) rotate(6deg); }
+    .icon-box svg { width: 22px; height: 22px; }
+
+    .badge {
+      display: inline-flex; align-items: center; gap: 5px;
+      padding: 0.3rem 0.85rem; border-radius: 999px;
+      font-size: 0.68rem; font-weight: 700; letter-spacing: 0.07em;
+      text-transform: uppercase;
+    }
+    .badge.available {
+      background: rgba(34,211,238,0.08);
+      border: 1px solid rgba(34,211,238,0.2);
+      color: var(--cyan);
+    }
+    .badge.coming_soon {
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.06);
+      color: var(--dim);
+    }
+    .badge-pulse {
+      width: 5px; height: 5px; border-radius: 50%;
+      background: var(--cyan); animation: blink 1.5s ease-in-out infinite;
+    }
+
+    .scard h3 {
+      font-family: 'Inter', sans-serif;
+      font-size: 1.2rem; font-weight: 700;
+      letter-spacing: -0.02em; color: #fff; line-height: 1.2;
+    }
+    .scard p {
+      color: var(--muted); font-size: 0.88rem; line-height: 1.65;
+      font-weight: 300; flex: 1;
+    }
+
+    .launch-btn {
+      display: inline-flex; align-items: center; gap: 0.5rem;
+      padding: 0.75rem 1.4rem; border-radius: 999px;
+      background: linear-gradient(135deg, #22d3ee, #6366f1);
+      color: #fff; font-weight: 600; font-size: 0.85rem;
+      text-decoration: none; width: fit-content; margin-top: 0.5rem;
+      box-shadow: 0 6px 20px rgba(34,211,238,0.2);
+      transition: all 0.3s;
+    }
+    .launch-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 28px rgba(34,211,238,0.32);
+      filter: brightness(1.07);
+    }
+    .launch-btn svg { width: 16px; height: 16px; transition: transform 0.25s; }
+    .launch-btn:hover svg { transform: translateX(3px); }
+
+    .locked {
+      display: inline-flex; align-items: center; gap: 0.5rem;
+      padding: 0.75rem 0; color: var(--dim);
+      font-size: 0.8rem; font-weight: 600;
+      letter-spacing: 0.06em; text-transform: uppercase;
+      margin-top: 0.5rem;
+    }
+    .locked svg { width: 14px; height: 14px; }
+
+    .module-details {
+      display: grid;
+      gap: 0.7rem;
+      max-height: 0;
+      opacity: 0;
+      overflow: hidden;
+      transform: translateY(-4px);
+      transition: max-height 0.45s cubic-bezier(0.23,1,0.32,1), opacity 0.3s ease, transform 0.3s ease;
+    }
+    .module-details h4 {
+      font-size: 0.78rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--cyan);
+    }
+    .module-details ul {
+      list-style: none;
+      display: grid;
+      gap: 0.5rem;
+    }
+    .module-details li {
+      position: relative;
+      padding-left: 1rem;
+      color: var(--muted);
+      font-size: 0.86rem;
+      line-height: 1.6;
+    }
+    .module-details li::before {
+      content: '•';
+      position: absolute;
+      left: 0;
+      color: var(--cyan);
+    }
+    .scard.coming_soon.expanded .locked {
+      display: none;
+    }
+    .scard.coming_soon.expanded .module-details {
+      max-height: 220px;
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* ── STATS STRIP ── */
+    .stats-strip {
+      display: grid; grid-template-columns: repeat(3, 1fr);
+      gap: 1px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.05);
+      border-radius: 20px; overflow: hidden;
+      margin: 4rem 0;
+    }
+    .stat-item {
+      padding: 2.5rem 2rem; text-align: center;
+      background: rgba(4,10,25,0.7);
+      transition: background 0.3s;
+    }
+    .stat-item:hover { background: rgba(8,20,48,0.85); }
+    .stat-num {
+      font-family: 'Inter', sans-serif;
+      font-size: 3rem; font-weight: 800;
+      background: linear-gradient(135deg, #22d3ee, #818cf8);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      background-clip: text; line-height: 1;
+      margin-bottom: 0.5rem;
+    }
+    .stat-label { color: var(--muted); font-size: 0.82rem; font-weight: 400; letter-spacing: 0.04em; }
+
+    /* ── FOOTER ── */
+    footer {
+      border-top: 1px solid rgba(255,255,255,0.04);
+      padding: 2.5rem 0; text-align: center;
+      color: var(--dim); font-size: 0.82rem;
+    }
+
+    /* ── PAGE LOAD ANIMATIONS ── */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(30px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .anim { opacity: 0; animation: fadeUp 0.8s cubic-bezier(0.23,1,0.32,1) forwards; }
+    .anim-1 { animation-delay: 0.1s; }
+    .anim-2 { animation-delay: 0.2s; }
+    .anim-3 { animation-delay: 0.32s; }
+    .anim-4 { animation-delay: 0.45s; }
+    .anim-5 { animation-delay: 0.58s; }
+
+    /* responsive */
+    @media (max-width: 960px) {
+      .hero-grid { grid-template-columns: 1fr; }
+      .services-grid { grid-template-columns: repeat(2, 1fr); }
+      .services-grid > .scard {
+        grid-column: auto !important;
+        grid-row: auto !important;
+      }
+      .ecosystem-panel { min-height: 480px; }
+    }
+    @media (max-width: 600px) {
+      .services-grid { grid-template-columns: 1fr; }
+      .stats-strip { grid-template-columns: 1fr; }
+      .hero-panel { padding: 2rem; }
+      .nav-links { display: none; }
+    }
+  </style>
 </head>
 <body>
-    <div class="page-shell">
-        <header class="topbar">
-            <div class="container">
-                <div class="topbar-inner glass-card">
-                    <a class="brand" href="/">
-                        <div class="brand-mark">C</div>
-                        <div class="brand-copy">
-                            <strong>CreatorOS</strong>
-                            <span>Service hub</span>
-                        </div>
-                    </a>
 
-                    <nav class="nav-links">
-                        <a href="#status">Status</a>
-                        <a href="#services">Services</a>
-                    </nav>
-                </div>
-            </div>
-        </header>
+<div class="mesh-bg"><div class="mesh-blob3"></div></div>
+<div class="grid-overlay"></div>
 
-        <main>
-            <section class="hero">
-                <div class="container">
-                    <div class="hero-grid">
-                        <div class="hero-panel glass-card">
-                            <div class="hero-kicker"><span class="hero-kicker-dot"></span> Creator tools, one place</div>
-                            <h1>Shortcuts for creators, wrapped in a sharper <span>hub</span>.</h1>
-                            <p>
-                                Explore the live URL shortener and the rest of the CreatorOS modules
-                            </p>
-
-                            <div class="hero-actions">
-                                <a class="action-btn primary" href="/signup">Get Started</a>
-                                <a class="action-btn secondary" href="#services">Browse services</a>
-                            </div>
-                        </div>
-
-                        <aside class="stats-panel glass-card" id="status">
-                            <div class="mini-card" style="animation: floatSoft 6s ease-in-out infinite;">
-                                <p class="mini-label">Live module</p>
-                                <p class="mini-value">1</p>
-                                <p class="mini-note">The URL shortener is available now.</p>
-                            </div>
-                            <div class="mini-card" style="animation: floatSoft 6s ease-in-out infinite; animation-delay: 1.5s;">
-                                <p class="mini-label">Coming soon</p>
-                                <p class="mini-value">5</p>
-                                <p class="mini-note">Analytics, DM automation, CRM, Content OS and more.</p>
-                            </div>
-                        </aside>
-                    </div>
-                </div>
-            </section>
-
-            <section class="section" id="services">
-                <div class="container">
-                    <div class="section-heading">
-                        <h2>Services</h2>
-                        <p>
-                            The Service Hub is the gateway to all CreatorOS modules. Each service is designed to integrate seamlessly with the others, creating a powerful ecosystem for creators.  
-                        </p>
-                    </div>
-
-                    <div class="grid">
-                        <% services.forEach((service, index) => { %>
-                            <article class="service-card glass-card <%= service.status %>" data-index="<%= index %>">
-                                <span class="badge <%= service.status %>">
-                                    <%= service.status === 'available' ? 'Available now' : 'Coming soon' %>
-                                </span>
-                                <h3><%= service.name %></h3>
-                                <p><%= service.description %></p>
-                                <a class="service-link <%= service.status %>" href="<%= service.route %>">
-                                    <%= service.status === 'available' ? 'Open service' : 'View placeholder' %>
-                                </a>
-                            </article>
-                        <% }) %>
-                    </div>
-                </div>
-            </section>
-        </main>
-
-        <footer class="footer">
-            <p>&copy; 2026 CreatorOS. All Rights Reserved.</p>
-        </footer>
+<div class="page">
+  <nav>
+    <div class="container">
+      <div class="nav-inner">
+        <a class="brand" href="/">
+          <div class="brand-orb">C</div>
+          <div class="brand-text">
+            <strong>CreatorOS</strong>
+            <span>Unified Dashboard</span>
+          </div>
+        </a>
+        <div class="nav-links">
+          <a href="#services">Workspace</a>
+          <a href="/login" class="btn-signin">Sign In →</a>
+        </div>
+      </div>
     </div>
+  </nav>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
-    <script>
-        const tl = gsap.timeline({ defaults: { ease: 'power3.out' } });
+  <!-- HERO -->
+  <section class="hero">
+    <div class="container">
+      <div class="hero-grid">
+        <!-- left -->
+        <div class="hero-panel anim anim-1" id="heroPanel">
+          <div class="kicker anim anim-2">
+            <div class="kicker-dot"></div>
+            Platform Workspace Active
+          </div>
+          <h1 class="anim anim-3">Your entire creator empire, <span class="gradient-text">unified.</span></h1>
+          <p class="anim anim-4">Stop juggling ten tools. Connect your link-in-bio, file vault, caption tools, and analytics into one beautiful, lightning-fast workspace built for creators.</p>
+          <div class="hero-actions anim anim-5">
+            <a href="/dashboard" class="btn-primary">
+              Launch Dashboard
+              <svg fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" width="16" height="16"><path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg>
+            </a>
+            <a href="#services" class="btn-secondary">Explore Live Services</a>
+          </div>
+        </div>
 
-        tl.from('.topbar-inner', { opacity: 0, y: -24, duration: 0.7 })
-          .from('.hero-kicker', { opacity: 0, y: 16, duration: 0.5 }, '-=0.25')
-          .from('.hero h1', { opacity: 0, y: 44, duration: 0.9 }, '-=0.1')
-          .from('.hero p', { opacity: 0, y: 26, duration: 0.75 }, '-=0.55')
-          .from('.hero-actions > a', { opacity: 0, y: 18, duration: 0.55, stagger: 0.12 }, '-=0.45')
-          .from('.stats-panel .mini-card', { opacity: 0, y: 30, duration: 0.65, stagger: 0.12 }, '-=0.55');
-    </script>
+        <!-- right: 3D ecosystem -->
+        <div class="ecosystem-panel anim anim-2" id="ecoPanel">
+          <div class="eco-grid"></div>
+          <div class="eco-glow"></div>
+          <div class="card-stack">
+            <!-- Card 1: Caption Tool -->
+            <div class="fc fc-1" style="z-index:10">
+              <div class="fc-icon" style="background:rgba(34,211,238,0.1);border:1px solid rgba(34,211,238,0.2);color:#22d3ee">
+                <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904L9 21l-1.81-5.096L2 15l5.096-1.81L9 8l1.81 5.096L16 15z"/></svg>
+              </div>
+              <div>
+                <div class="fc-name">Caption Tool</div>
+                <div class="fc-tag live">Live</div>
+              </div>
+            </div>
+            <!-- Card 2: URL Shortener -->
+            <div class="fc fc-2" style="z-index:9">
+              <div class="fc-icon" style="background:rgba(99,102,241,0.12);border:1px solid rgba(99,102,241,0.25);color:#818cf8">
+                <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.1-1.1m-.758-4.9a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/></svg>
+              </div>
+              <div>
+                <div class="fc-name">URL Shortener</div>
+                <div class="fc-tag live">Live</div>
+              </div>
+            </div>
+            <!-- Card 3: File Upload -->
+            <div class="fc fc-3" style="z-index:8">
+              <div class="fc-icon" style="background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.22);color:#34d399">
+                <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/></svg>
+              </div>
+              <div>
+                <div class="fc-name">File Upload</div>
+                <div class="fc-tag live">Live</div>
+              </div>
+            </div>
+            <!-- Card 4: Analytics -->
+            <div class="fc fc-4" style="z-index:7">
+              <div class="fc-icon" style="background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.15);color:#fbbf24">
+                <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+              </div>
+              <div>
+                <div class="fc-name">Analytics</div>
+                <div class="fc-tag soon">Soon</div>
+              </div>
+            </div>
+            <!-- Card 5: Creator CRM -->
+            <div class="fc fc-5" style="z-index:6">
+              <div class="fc-icon" style="background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.15);color:#f87171">
+                <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+              </div>
+              <div>
+                <div class="fc-name">Creator CRM</div>
+                <div class="fc-tag soon">Soon</div>
+              </div>
+            </div>
+            <!-- Card 6: Content OS -->
+            <div class="fc fc-6" style="z-index:5">
+              <div class="fc-icon" style="background:rgba(168,85,247,0.1);border:1px solid rgba(168,85,247,0.2);color:#c084fc">
+                <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
+              </div>
+              <div>
+                <div class="fc-name">Content OS</div>
+                <div class="fc-tag soon">Soon</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- STATS -->
+  <div class="container">
+    <div class="stats-strip">
+      <div class="stat-item">
+        <div class="stat-num">3</div>
+        <div class="stat-label">Live Modules</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-num">8+</div>
+        <div class="stat-label">Tools in Pipeline</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-num">1</div>
+        <div class="stat-label">Unified Workspace</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SERVICES -->
+  <section class="section" id="services">
+    <div class="container">
+      <div class="section-header">
+        <div>
+          <div class="section-eyebrow">
+            <div class="eyebrow-dot"></div>
+            <span class="eyebrow-text">Creator Hub</span>
+          </div>
+          <h2>Explore Modules</h2>
+          <p>Launch active tools or explore the upcoming pipeline roadmap designed to unify your creator workflow.</p>
+        </div>
+        <div class="tab-bar">
+          <button class="tab-btn active" onclick="switchTab('all',this)">All Modules</button>
+          <button class="tab-btn" onclick="switchTab('active',this)">Active Suite</button>
+          <button class="tab-btn" onclick="switchTab('pipeline',this)">Pipeline</button>
+        </div>
+      </div>
+
+      <div class="services-grid" id="servicesGrid">
+
+        <!-- AVAILABLE -->
+        <article class="scard available" data-status="available">
+          <div class="card-top">
+            <div class="icon-box">
+              <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904L9 21l-1.81-5.096L2 15l5.096-1.81L9 8l1.81 5.096L16 15l-6.187.904z"/></svg>
+            </div>
+            <span class="badge available"><span class="badge-pulse"></span>Available</span>
+          </div>
+          <h3>Caption &amp; Hashtag Tool</h3>
+          <p>Get captions, hashtags and song suggestions based on your content type.</p>
+          <a href="/services/suggestion-tool" class="launch-btn">
+            Launch Module
+            <svg fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg>
+          </a>
+        </article>
+
+        <article class="scard available" data-status="available">
+          <div class="card-top">
+            <div class="icon-box">
+              <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/></svg>
+            </div>
+            <span class="badge available"><span class="badge-pulse"></span>Available</span>
+          </div>
+          <h3>File Upload</h3>
+          <p>Drag and drop or click to upload files. Supports all common formats.</p>
+          <a href="/services/file-upload" class="launch-btn">
+            Launch Module
+            <svg fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg>
+          </a>
+        </article>
+
+        <article class="scard available" data-status="available">
+          <div class="card-top">
+            <div class="icon-box">
+              <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.1-1.1m-.758-4.9a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/></svg>
+            </div>
+            <span class="badge available"><span class="badge-pulse"></span>Available</span>
+          </div>
+          <h3>Titli – URL Shortener</h3>
+          <p>Create compact short links and redirect users reliably.</p>
+          <a href="/services/url-shortener" class="launch-btn">
+            Launch Module
+            <svg fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg>
+          </a>
+        </article>
+
+        <!-- ROADMAP -->
+        <article class="scard coming_soon" data-status="coming_soon">
+          <div class="card-top">
+            <div class="icon-box">
+              <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+            </div>
+            <span class="badge coming_soon">Roadmap</span>
+          </div>
+          <h3>Analytics Dashboard</h3>
+          <p>Track performance and engagement across your creator services.</p>
+          <div class="locked">
+            <svg fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+            Module Locked
+          </div>
+          <div class="module-details" aria-hidden="true">
+            <h4>What it will provide</h4>
+            <ul>
+              <li>Live performance snapshots across your tools and campaigns.</li>
+              <li>Audience trends, top content tracking, and conversion signals.</li>
+              <li>Export-ready reports for quick decisions and sharing.</li>
+            </ul>
+          </div>
+        </article>
+
+        <article class="scard coming_soon" data-status="coming_soon">
+          <div class="card-top">
+            <div class="icon-box">
+              <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
+            </div>
+            <span class="badge coming_soon">Roadmap</span>
+          </div>
+          <h3>Content OS</h3>
+          <p>Organize ideas, scripts, and content planning workflows.</p>
+          <div class="locked">
+            <svg fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+            Module Locked
+          </div>
+          <div class="module-details" aria-hidden="true">
+            <h4>What it will provide</h4>
+            <ul>
+              <li>Idea capture, script notes, and planning for every content drop.</li>
+              <li>A simple workflow for drafts, approvals, and publishing steps.</li>
+              <li>A content calendar view to keep your output consistent.</li>
+            </ul>
+          </div>
+        </article>
+
+        <article class="scard coming_soon" data-status="coming_soon">
+          <div class="card-top">
+            <div class="icon-box">
+              <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+            </div>
+            <span class="badge coming_soon">Roadmap</span>
+          </div>
+          <h3>Creator CRM</h3>
+          <p>Manage brand deals, contacts, and campaign status in one place.</p>
+          <div class="locked">
+            <svg fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+            Module Locked
+          </div>
+          <div class="module-details" aria-hidden="true">
+            <h4>What it will provide</h4>
+            <ul>
+              <li>Brand deal tracking, contact records, and collaboration history.</li>
+              <li>Follow-up reminders and campaign status visibility in one place.</li>
+              <li>A lightweight hub for deals, notes, and relationship management.</li>
+            </ul>
+          </div>
+        </article>
+
+        <article class="scard coming_soon" data-status="coming_soon">
+          <div class="card-top">
+            <div class="icon-box">
+              <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
+            </div>
+            <span class="badge coming_soon">Roadmap</span>
+          </div>
+          <h3>DM Automation</h3>
+          <p>Automate replies and deliver lead magnets via keyword triggers.</p>
+          <div class="locked">
+            <svg fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+            Module Locked
+          </div>
+          <div class="module-details" aria-hidden="true">
+            <h4>What it will provide</h4>
+            <ul>
+              <li>Keyword-based auto replies and lead magnet delivery flows.</li>
+              <li>Fast response handling for common questions and inquiries.</li>
+              <li>Simple automation that still leaves room for manual follow-up.</li>
+            </ul>
+          </div>
+        </article>
+
+        <article class="scard coming_soon" data-status="coming_soon">
+          <div class="card-top">
+            <div class="icon-box">
+              <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+            </div>
+            <span class="badge coming_soon">Roadmap</span>
+          </div>
+          <h3>Smart Bio System</h3>
+          <p>A smart mobile-first bio platform with branding, analytics, and custom links.</p>
+          <div class="locked">
+            <svg fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+            Module Locked
+          </div>
+          <div class="module-details" aria-hidden="true">
+            <h4>What it will provide</h4>
+            <ul>
+              <li>A mobile-first bio page with your links, brand styling, and CTA blocks.</li>
+              <li>Smart routing for promos, socials, and high-priority destinations.</li>
+              <li>Quick analytics on which links are getting the most attention.</li>
+            </ul>
+          </div>
+        </article>
+
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <div class="container">
+      <p>&copy; 2026 CreatorOS. All Rights Reserved.</p>
+    </div>
+  </footer>
+</div>
+
+<script>
+  // Tab switching
+  function switchTab(type, btn) {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    document.querySelectorAll('.scard').forEach(card => {
+      const status = card.dataset.status;
+      if (type === 'all') {
+        card.style.display = 'flex';
+        setTimeout(() => card.style.opacity = (status === 'available' ? '1' : '0.7'), 10);
+      } else if (type === 'active') {
+        if (status === 'available') {
+          card.style.display = 'flex';
+          setTimeout(() => card.style.opacity = '1', 10);
+        } else {
+          card.style.opacity = '0';
+          setTimeout(() => card.style.display = 'none', 200);
+        }
+      } else {
+        if (status !== 'available') {
+          card.style.display = 'flex';
+          setTimeout(() => card.style.opacity = '0.7', 10);
+        } else {
+          card.style.opacity = '0';
+          setTimeout(() => card.style.display = 'none', 200);
+        }
+      }
+    });
+  }
+
+  // 3D mouse tilt on hero panel
+  const heroPanel = document.getElementById('heroPanel');
+  heroPanel.addEventListener('mousemove', e => {
+    const r = heroPanel.getBoundingClientRect();
+    const x = (e.clientX - r.left) / r.width - 0.5;
+    const y = (e.clientY - r.top) / r.height - 0.5;
+    heroPanel.style.transform = `rotateY(${x * 8}deg) rotateX(${-y * 6}deg) translateZ(0)`;
+  });
+  heroPanel.addEventListener('mouseleave', () => {
+    heroPanel.style.transform = '';
+  });
+
+  // Ecosystem panel subtle parallax
+  const ecoPanel = document.getElementById('ecoPanel');
+  ecoPanel.addEventListener('mousemove', e => {
+    const r = ecoPanel.getBoundingClientRect();
+    const x = (e.clientX - r.left) / r.width - 0.5;
+    const y = (e.clientY - r.top) / r.height - 0.5;
+    ecoPanel.style.transform = `rotateY(${x * 5}deg) rotateX(${-y * 4}deg)`;
+  });
+  ecoPanel.addEventListener('mouseleave', () => {
+    ecoPanel.style.transform = '';
+  });
+
+  // Scroll-based fade-in for service cards
+  const observer = new IntersectionObserver(entries => {
+    entries.forEach((entry, i) => {
+      if (entry.isIntersecting) {
+        setTimeout(() => {
+          entry.target.style.opacity = entry.target.classList.contains('coming_soon') ? '0.7' : '1';
+          entry.target.style.transform = 'translateY(0)';
+        }, i * 80);
+        observer.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.1 });
+
+  document.querySelectorAll('.scard').forEach(card => {
+    card.style.opacity = '0';
+    card.style.transform = 'translateY(24px)';
+    card.style.transition = 'opacity 0.7s cubic-bezier(0.23,1,0.32,1), transform 0.7s cubic-bezier(0.23,1,0.32,1), border-color 0.5s, box-shadow 0.5s';
+    observer.observe(card);
+  });
+
+  // Expand roadmap cards into preview boxes
+  const roadmapCards = document.querySelectorAll('.scard.coming_soon');
+
+  function toggleRoadmapCard(targetCard) {
+    const isExpanded = targetCard.classList.contains('expanded');
+
+    roadmapCards.forEach(card => {
+      if (card !== targetCard) {
+        card.classList.remove('expanded');
+        card.setAttribute('aria-expanded', 'false');
+      }
+    });
+
+    targetCard.classList.toggle('expanded', !isExpanded);
+    targetCard.setAttribute('aria-expanded', String(!isExpanded));
+  }
+
+  roadmapCards.forEach(card => {
+    card.setAttribute('role', 'button');
+    card.setAttribute('tabindex', '0');
+    card.setAttribute('aria-expanded', 'false');
+
+    card.addEventListener('click', () => toggleRoadmapCard(card));
+    card.addEventListener('keydown', event => {
+      if (event.key === 'Enter' || event.key === ' ') {
+        event.preventDefault();
+        toggleRoadmapCard(card);
+      }
+    });
+  });
+</script>
 </body>
 </html>
