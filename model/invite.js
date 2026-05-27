@@ -65,9 +65,18 @@ const MockInviteModel = {
   find: () => emptyInviteQuery,
 };
 
-const InviteModel =
-  process.env.USE_MOCK_DB === "true"
+function getActiveInviteModel() {
+  return process.env.USE_MOCK_DB === "true"
     ? MockInviteModel
     : MongooseInviteModel;
+}
+
+const InviteModel = {
+  countDocuments: (...args) => getActiveInviteModel().countDocuments(...args),
+  findOne: (...args) => getActiveInviteModel().findOne(...args),
+  findByIdAndDelete: (...args) => getActiveInviteModel().findByIdAndDelete(...args),
+  find: (...args) => getActiveInviteModel().find(...args),
+  create: (...args) => getActiveInviteModel().create(...args),
+};
 
 module.exports = InviteModel;

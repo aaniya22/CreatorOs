@@ -156,9 +156,19 @@ class MockUserModel {
     });
 })();
 
-const UserModel =
-    process.env.USE_MOCK_DB === "true"
+function getActiveUserModel() {
+    return process.env.USE_MOCK_DB === "true"
         ? MockUserModel
         : MongooseUserModel;
+}
+
+function UserModel(data) {
+    const ActiveUserModel = getActiveUserModel();
+    return new ActiveUserModel(data);
+}
+
+UserModel.findOne = (...args) => getActiveUserModel().findOne(...args);
+UserModel.create = (...args) => getActiveUserModel().create(...args);
+UserModel.findById = (...args) => getActiveUserModel().findById(...args);
 
 module.exports = UserModel;
