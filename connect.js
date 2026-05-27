@@ -1,6 +1,12 @@
 const mongoose = require("mongoose");
 
+let connectionPromise = null;
+
 const connectDB = async () => {
+    if (process.env.USE_MOCK_DB === "true") return;
+    if (mongoose.connection.readyState === 1) return;
+    if (connectionPromise) return connectionPromise;
+
     const uri = process.env.MONGODB_URI;
     const isPlaceholder = !uri || uri.includes("<user_name>") || uri.includes("<password>") || uri.includes("7udof89w.mongodb.net");
 
@@ -39,12 +45,14 @@ const connectDB = async () => {
     }
 
     try {
-        await mongoose.connect(uri, {
+        connectionPromise = mongoose.connect(uri, {
             serverSelectionTimeoutMS: 3000
         });
+        await connectionPromise;
 
         console.log("MongoDB Connected Successfully");
     } catch (error) {
+        connectionPromise = null;
         console.log("\n==================================================");
         console.log("MongoDB Connection Error:", error.message);
         console.log("👉 CreatorOS is falling back to MOCK DATABASE mode.");

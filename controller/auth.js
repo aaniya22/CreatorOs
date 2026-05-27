@@ -1,12 +1,20 @@
-const User = require("../model/user");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const crypto = require("crypto");
+const connectDB = require("../connect");
 
 const CONTRIBUTOR_EMAIL = "contributor@creatoros.local";
 const CONTRIBUTOR_NAME = "Contributor";
 const ONE_WEEK_MS = 7 * 24 * 60 * 60 * 1000;
 const GENERIC_LOGIN_ERROR = "Invalid email or password";
+
+async function getUserModel() {
+    await connectDB();
+    if (process.env.USE_MOCK_DB === "true") {
+        delete require.cache[require.resolve("../model/user")];
+    }
+    return require("../model/user");
+}
 
 function wantsHtml(req) {
     const accept = req.headers.accept || "";
@@ -68,6 +76,8 @@ function renderLoginError(req, res) {
 
 const signup = async (req, res, next) => {
     try {
+        const User = await getUserModel();
+
         const { name, email, password } = req.body || {};
         const normalizedEmail = email.toLowerCase().trim();
 
@@ -98,6 +108,8 @@ const signup = async (req, res, next) => {
 
 const login = async (req, res, next) => {
     try {
+        const User = await getUserModel();
+
         const { email, password } = req.body || {};
         const normalizedEmail = email.toLowerCase().trim();
         const user = await User.findOne({ email: normalizedEmail });
@@ -143,6 +155,8 @@ const handleGoogleCallback = async (req, res) => {
 
 const loginAsContributor = async (req, res, next) => {
     try {
+        const User = await getUserModel();
+
         let user = await User.findOne({ email: CONTRIBUTOR_EMAIL });
 
         if (!user) {
