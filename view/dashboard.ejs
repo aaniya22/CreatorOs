@@ -1535,6 +1535,18 @@
                 <!-- Section 1: Statistics Cards Row (Analytics Page subset) -->
                 <!-- Stats -->
                 <div class="stats-grid" id="analytics">
+                    <article class="stat-card">
+                        <div class="stat-icon purple">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+                                <path d="M10 13a5 5 0 0 0 7.07 0l2.83-2.83a5 5 0 0 0-7.07-7.07L11 4.9"></path>
+                                <path d="M14 11a5 5 0 0 0-7.07 0L4.1 13.83a5 5 0 0 0 7.07 7.07L13 19.1"></path>
+                            </svg>
+                        </div>
+                        <div class="stat-content">
+                            <h3>Total Links</h3>
+                            <p class="stat-value"><%= dashboardData.stats.totalLinks %></p>
+                        </div>
+                        <p class="stat-note">All time</p>
                     <article class="stat-card-retro">
                         <span class="card-id">STAT_01</span>
                         <span class="label">Total Links</span>
@@ -1576,9 +1588,9 @@
                         </div>
                         <div class="stat-content">
                             <h3>Total Clicks</h3>
-                            <p class="stat-value">1,256</p>
+                            <p class="stat-value"><%= dashboardData.stats.totalClicks %></p>
                         </div>
-                        <p class="stat-note"><span class="trend">+18%</span> from last month</p>
+                        <p class="stat-note">All time</p>
                     </article>
                     <article class="stat-card">
                         <div class="stat-icon green">
@@ -1589,7 +1601,7 @@
                         </div>
                         <div class="stat-content">
                             <h3>Top Performing</h3>
-                            <p class="stat-value">423</p>
+                            <p class="stat-value"><%= dashboardData.stats.topPerforming %></p>
                         </div>
                         <p class="stat-note">Clicks</p>
                     </article>
@@ -1604,9 +1616,9 @@
                         </div>
                         <div class="stat-content">
                             <h3>Joined On</h3>
-                            <p class="stat-value">24 May 2025</p>
+                            <p class="stat-value"><%= dashboardData.stats.joinedOn %></p>
                         </div>
-                        <p class="stat-note">2 weeks ago</p>
+                        <p class="stat-note">CreatorOS user</p>
                     </article>
                 </div>
 
@@ -1645,6 +1657,8 @@
                                 <option>Last 30 Days</option>
                             </select>
                         </div>
+                        <div class="chart-wrap" style="position: relative; height: 280px; width: 100%;">
+                            <canvas id="clicksChart"></canvas>
                         
                         <div class="chart-wrap">
                             <svg class="line-chart" viewBox="0 0 720 280" role="img" aria-label="Clicks overview chart">
@@ -1774,6 +1788,10 @@
                         <div class="panel-head">
                             <h2>Top Referrers</h2>
                         </div>
+                        <div class="donut-layout" style="display: block; position: relative; height: 260px; width: 100%;">
+                            <canvas id="referrersChart"></canvas>
+                        </div>
+                    </section>
                         <div class="donut-layout">
                             <div class="donut" aria-label="Top referrers chart"></div>
                             <div class="legend">
@@ -1811,6 +1829,52 @@
                                 </tr>
                             </thead>
                             <tbody>
+                                <% if (dashboardData.recentLinks.length === 0) { %>
+                                    <tr>
+                                        <td colspan="6" style="text-align: center;">No links generated yet.</td>
+                                    </tr>
+                                <% } else { %>
+                                    <% dashboardData.recentLinks.forEach(link => { %>
+                                        <tr>
+                                            <td><%= link.originalUrl %></td>
+                                            <td class="short-url">creatoros.link/<%= link.shortUrl %></td>
+                                            <td><%= link.clicks %></td>
+                                            <td><span class="qr-badge">Ready</span></td>
+                                            <td><%= link.date %></td>
+                                            <td>
+                                                <div class="row-actions">
+                                                    <a class="row-action" href="/services/url-shortener" aria-label="View details" title="View details">
+                                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                                            <path d="M4 19V5"></path>
+                                                            <path d="M9 19v-6"></path>
+                                                            <path d="M14 19V9"></path>
+                                                            <path d="M19 19V3"></path>
+                                                        </svg>
+                                                    </a>
+                                                    <button
+                                                        class="row-action qr-trigger"
+                                                        aria-label="Show QR code"
+                                                        title="QR Code"
+                                                        data-shortid="<%= link.shortUrl %>"
+                                                        data-shorturl="https://creatoros.link/<%= link.shortUrl %>">
+                                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                                            <rect x="3" y="3" width="7" height="7" rx="1"></rect>
+                                                            <rect x="14" y="3" width="7" height="7" rx="1"></rect>
+                                                            <rect x="3" y="14" width="7" height="7" rx="1"></rect>
+                                                            <path d="M14 14h.01"></path>
+                                                            <path d="M14 17h3"></path>
+                                                            <path d="M17 14v3"></path>
+                                                            <path d="M20 14h.01"></path>
+                                                            <path d="M20 17h.01"></path>
+                                                            <path d="M20 20h.01"></path>
+                                                            <path d="M17 20h.01"></path>
+                                                        </svg>
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    <% }) %>
+                                <% } %>
                                 <tr>
                                     <td>https://example.com/awesome-video</td>
                                     <td class="short-url">creatoros.link/abc123</td>
@@ -2050,9 +2114,12 @@
     </div>
 
     <script src="/js/pages/dashboard.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script id="dashboard-data" type="application/json"><%- JSON.stringify(dashboardData) %></script>
     <script>
     (function () {
         'use strict';
+        const dashboardData = JSON.parse(document.getElementById('dashboard-data').textContent);
 
         // ── Sidebar toggle ──────────────────────────────────────────────────
         const layout        = document.getElementById('dashboardLayout');
@@ -2277,6 +2344,120 @@
                 e.preventDefault(); first.focus();
             }
         });
+
+        // ── Chart.js Initialization ─────────────────────────────────────────
+        if (typeof Chart !== 'undefined' && dashboardData && dashboardData.charts) {
+            // Setup global defaults for dark/light mode
+            Chart.defaults.color = '#94a3b8';
+            Chart.defaults.font.family = "'Poppins', sans-serif";
+
+            // Clicks Overview Chart
+            const ctxClicks = document.getElementById('clicksChart');
+            let clicksChartInstance = null;
+            if (ctxClicks) {
+                clicksChartInstance = new Chart(ctxClicks, {
+                    type: 'line',
+                    data: {
+                        labels: dashboardData.charts.clicksOverview.labels,
+                        datasets: [{
+                            label: 'Clicks',
+                            data: dashboardData.charts.clicksOverview.data,
+                            borderColor: '#38bdf8',
+                            backgroundColor: 'rgba(56, 189, 248, 0.1)',
+                            borderWidth: 3,
+                            fill: true,
+                            tension: 0.4,
+                            pointBackgroundColor: '#06101f',
+                            pointBorderColor: '#38bdf8',
+                            pointBorderWidth: 2,
+                            pointRadius: 4,
+                            pointHoverRadius: 6
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { display: false },
+                            tooltip: {
+                                backgroundColor: 'rgba(8, 19, 39, 0.9)',
+                                titleColor: '#fff',
+                                bodyColor: '#cbd5e1',
+                                borderColor: 'rgba(148, 163, 184, 0.2)',
+                                borderWidth: 1,
+                                padding: 12,
+                                displayColors: false
+                            }
+                        },
+                        scales: {
+                            x: {
+                                grid: { display: false, drawBorder: false }
+                            },
+                            y: {
+                                border: { display: false },
+                                grid: { color: 'rgba(148, 163, 184, 0.1)' },
+                                beginAtZero: true,
+                                ticks: { precision: 0 }
+                            }
+                        }
+                    }
+                });
+
+                // Handle Date Range Selector
+                const rangeSelect = document.querySelector('.select-pill');
+                if (rangeSelect && clicksChartInstance) {
+                    rangeSelect.addEventListener('change', (e) => {
+                        const val = e.target.value;
+                        let sliceCount = 30;
+                        if (val === 'Last 7 Days') sliceCount = 7;
+                        
+                        clicksChartInstance.data.labels = dashboardData.charts.clicksOverview.labels.slice(-sliceCount);
+                        clicksChartInstance.data.datasets[0].data = dashboardData.charts.clicksOverview.data.slice(-sliceCount);
+                        clicksChartInstance.update();
+                    });
+                }
+            }
+
+            // Top Referrers Donut Chart
+            const ctxReferrers = document.getElementById('referrersChart');
+            if (ctxReferrers) {
+                new Chart(ctxReferrers, {
+                    type: 'doughnut',
+                    data: {
+                        labels: dashboardData.charts.topReferrers.labels,
+                        datasets: [{
+                            data: dashboardData.charts.topReferrers.data,
+                            backgroundColor: ['#22d3ee', '#38bdf8', '#64748b'],
+                            borderWidth: 0,
+                            hoverOffset: 4
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        cutout: '75%',
+                        plugins: {
+                            legend: {
+                                position: 'right',
+                                labels: {
+                                    color: '#cbd5e1',
+                                    usePointStyle: true,
+                                    padding: 20,
+                                    font: { size: 13 }
+                                }
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        return ' ' + context.label + ': ' + context.parsed + '%';
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+        }
     })();
     </script>
 </body>
