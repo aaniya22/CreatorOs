@@ -69,7 +69,10 @@ function serializeLink(entry, hostBase) {
  * @returns {Promise<void>|void}
  */
 async function handleGenerateShortUrl(req, res) {
-    const { redirectUrl, title, customSlug, tag } = req.body;
+    // The Zod schema accepts either `redirectUrl` or `url` as an alias;
+    // normalize here so the rest of the function only deals with one field.
+    const { redirectUrl: redirectUrlField, url, title, customSlug, tag } = req.body;
+    const redirectUrl = redirectUrlField || url;
 
     let shortId = shortid();
     if (customSlug) {
@@ -98,14 +101,27 @@ async function handleGenerateShortUrl(req, res) {
     const allowedTags = ['active', 'social', 'campaign', 'general'];
     const linkTag = allowedTags.includes(tag) ? tag : 'active';
 
-    const entry = await Url.create({
-        shortId,
-        redirectUrl,
-        userId: req.user?.id || null,
-        title: deriveTitle(redirectUrl, title?.trim()),
-        tag: linkTag,
-        linkedAt: new Date(),
-    });
+    let entry;
+    try {
+        entry = await Url.create({
+            shortId,
+            redirectUrl,
+            userId: req.user?.id || null,
+            title: deriveTitle(redirectUrl, title?.trim()),
+            tag: linkTag,
+            linkedAt: new Date(),
+        });
+    } catch (err) {
+        // TOCTOU: two concurrent requests can both pass the findOne() check
+        // above before either create() resolves. The unique index on
+        // shortId (see model/url.js) is the real guard against duplicates;
+        // this catch turns the resulting MongoDB E11000 error into a clean
+        // 409 instead of an unhandled 500.
+        if (err && err.code === 11000) {
+            return res.status(409).json({ error: 'That slug is already taken. Try another.' });
+        }
+        throw err;
+    }
 
     const hostBase = `${req.protocol}://${req.get('host')}`;
 
@@ -268,6 +284,10 @@ const handleGetQRCode = asyncHandler(async (req, res) => {
         return res.status(404).json({ success: false, message: "Short URL not found", error: "Short URL not found" });
     }
 
+    if (entry.userId?.toString() !== req.user?.id) {
+        return res.status(403).json({ success: false, message: "Not your URL", error: "Not your URL" });
+    }
+
     const baseUrl = process.env.BASE_URL || `${req.protocol}://${req.get('host')}`;
     const shortUrl = `${baseUrl}/u/${shortId}`;
 
@@ -301,6 +321,10 @@ const handleDownloadQRCode = asyncHandler(async (req, res) => {
         return res.status(404).json({ success: false, message: "Short URL not found", error: "Short URL not found" });
     }
 
+    if (entry.userId?.toString() !== req.user?.id) {
+        return res.status(403).json({ success: false, message: "Not your URL", error: "Not your URL" });
+    }
+
     const baseUrl = process.env.BASE_URL || `${req.protocol}://${req.get('host')}`;
     const shortUrl = `${baseUrl}/u/${shortId}`;
 
@@ -326,6 +350,16 @@ const handleUpdateQRColors = asyncHandler(async (req, res) => {
     const { shortId } = req.params;
     const { qrFgColor, qrBgColor } = req.body;
 
+    const entry = await Url.findOne({ shortId });
+
+    if (!entry) {
+        return res.status(404).json({ success: false, message: "Short URL not found", error: "Short URL not found" });
+    }
+
+    if (entry.userId?.toString() !== req.user?.id) {
+        return res.status(403).json({ success: false, message: "Not your URL", error: "Not your URL" });
+    }
+
     const updated = await Url.findOneAndUpdate(
         { shortId },
         {
@@ -336,10 +370,6 @@ const handleUpdateQRColors = asyncHandler(async (req, res) => {
         },
         { new: true }
     );
-
-    if (!updated) {
-        return res.status(404).json({ success: false, message: "Short URL not found", error: "Short URL not found" });
-    }
 
     return res.json({
         success: true,

@@ -105,7 +105,7 @@ router.post('/', protect, preventContributorWrites, urlShortenerApiLimiter, shor
  *       500:
  *         description: Internal server error
  */
-router.get('/qr/:shortId/download', handleDownloadQRCode);      
+router.get('/qr/:shortId/download', protect, handleDownloadQRCode);      
 
 /**
  * @swagger
@@ -123,7 +123,7 @@ router.get('/qr/:shortId/download', handleDownloadQRCode);
  *       500:
  *         description: Internal server error
  */
-router.get('/qr/:shortId',          handleGetQRCode);       
+router.get('/qr/:shortId', protect, handleGetQRCode);       
 
 /**
  * @swagger
