@@ -58,6 +58,7 @@ const urlSchema = new mongoose.Schema({
     ],
 });
 
+<<<<<<< fix/url-listforuser-missing-static
 /**
  * @function listForUser
  * @description Returns the most recent URLs created by a given user.
@@ -65,6 +66,8 @@ const urlSchema = new mongoose.Schema({
  * @param {number} [limit=100] - Maximum number of entries to return
  * @returns {Promise<Array>} Plain JS objects (lean) sorted newest first
  */
+=======
+>>>>>>> main
 urlSchema.statics.listForUser = async function (userId, limit = 100) {
     return this.find({ userId })
         .sort({ createdAt: -1 })
