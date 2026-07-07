@@ -3,6 +3,8 @@ const cookieParser = require("cookie-parser");
 const express = require('express');
 const passport = require("passport");
 const path = require('path');
+const cacheHeadersMiddleware = require('./middleware/cacheHeaders');
+const { getProfileFromCache, setProfileInCache } = require('./utils/profileCache');
 
 // Validate required environment variables
 const requiredEnvVars = [
@@ -33,8 +35,10 @@ const { acceptInvite, acceptInviteFromDashboard } = require('./controller/collab
 
 connectDB();
 require("./workers/analyticsRefreshWorker");
+require("./workers/contentPublishWorker").startContentPublishWorker();
 const { generateCsrf, verifyCsrf } = require('./middleware/csrf');
 
+app.use(cacheHeadersMiddleware);
 app.use(cookieParser());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json({
@@ -50,11 +54,19 @@ app.set("view engine", "ejs");
 app.set('views', path.join(__dirname, 'view'));
 app.locals.BRAND = BRAND;
 
+// Generate a per-request nonce for inline scripts (used by CSP below and
+// exposed to views via res.locals.nonce)
+const crypto = require('crypto');
+app.use((req, res, next) => {
+    res.locals.nonce = crypto.randomBytes(16).toString('base64');
+    next();
+});
+
 // Content Security Policy (CSP) header - defense-in-depth against XSS
 app.use((req, res, next) => {
     res.setHeader(
         'Content-Security-Policy',
-        "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https:; frame-ancestors 'none';"
+        `default-src 'self'; script-src 'self' 'nonce-${res.locals.nonce}' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https:; frame-ancestors 'none'; object-src 'none'; frame-src 'none';`
     );
     next();
 });
@@ -122,6 +134,9 @@ app.use('/api/instagram', protect, instagramRoutes);
 
 const settingsRoutes = require('./routes/settings');
 app.use('/api/settings', protect, settingsRoutes);
+
+const contentRoutes = require('./routes/content');
+app.use('/api/content', protect, contentRoutes);
 
 const uploadDir = "/tmp";
 
@@ -319,6 +334,17 @@ app.get('/services', (req, res) => {
     res.redirect('/');
 });
 
+app.get('/terms', (req, res) => {
+    res.render('terms');
+});
+app.get('/about', (req, res) => {
+    res.render('about');
+});
+
+app.get('/changelog', (req, res) => {
+    res.render('changelog');
+});
+
 // Dashboard
 app.get("/dashboard", protect, asyncHandler(async (req, res) => {
     const userDoc = isGuestContributor(req.user)
@@ -451,6 +477,15 @@ app.post('/bio/track/:linkId', asyncHandler(async (req, res) => {
 app.get('/@:handle', asyncHandler(async (req, res) => {
     const handle = req.params.handle;
 
+    const cachedResult = await getProfileFromCache(handle);
+    if (cachedResult) {
+        res.setCacheStatus('HIT');
+        const { profile, links } = cachedResult.data;
+        return res.render('bio-profile', { profile, links });
+    }
+
+    res.setCacheStatus('MISS');
+
     // Replace with DB lookup when BioProfile model is ready:
     // const bioProfile = await BioProfile.findOne({ handle }).lean();
 
@@ -472,6 +507,9 @@ app.get('/@:handle', asyncHandler(async (req, res) => {
         { id: 5, type: 'portfolio', icon: '🌐', label: 'Portfolio',  url: 'https://portfolio.dev/', category: 'work'   },
         { id: 6, type: 'email',     icon: '📧', label: 'Contact Me', url: 'mailto:hello@example.com', category: 'other' },
     ];
+
+    const cacheData = { profile, links };
+    await setProfileInCache(handle, cacheData);
 
     return res.render('bio-profile', { profile, links });
 }));
