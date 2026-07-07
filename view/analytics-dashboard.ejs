@@ -1517,7 +1517,8 @@
         </main>
     </div>
 
-    <script nonce="<%= nonce %>">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
         const sidebarToggle = document.getElementById('sidebarToggle');
         const dashboardLayout = document.getElementById('dashboardLayout');
         
@@ -1633,7 +1634,7 @@
             });
         }
     </script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js">
+    <script>
         window.addEventListener('themeChanged', () => {
             const newGrid = getComputedStyle(document.documentElement).getPropertyValue('--chart-grid-color').trim() || 'rgba(0,0,0,0.1)';
             const newText = getComputedStyle(document.documentElement).getPropertyValue('--text').trim() || '#111';

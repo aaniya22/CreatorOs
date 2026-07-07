@@ -103,6 +103,7 @@ const shortid = require('shortid');
 const multer = require('multer');
 const services = require('./services.config');
 const User = require('./model/user');
+const Creator = require('./model/creator');
 const Invite = require('./model/invite');
 const port = process.env.PORT || 3000;
 const urlRoutes = require('./routes/url');
@@ -228,50 +229,89 @@ function buildAccountViewModel(userDoc, fallbackUser) {
     };
 }
 
-function buildAnalyticsViewModel() {
+async function buildAnalyticsViewModel(creatorId) {
+    const AnalyticsSnapshot = require('./model/analyticsSnapshot');
+    const EngagementHistory = require('./model/engagementHistory');
+    const Post = require('./model/post');
+
+    const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+
+    const [latestSnapshot, history, topPostsRaw, postCount] = await Promise.all([
+        AnalyticsSnapshot.findOne({ creatorId }).sort({ createdAt: -1 }).lean(),
+        EngagementHistory.find({ creatorId, date: { $gte: thirtyDaysAgo } })
+            .sort({ date: 1 })
+            .lean(),
+        Post.find({ creatorId }).sort({ views: -1 }).limit(5).lean(),
+        Post.countDocuments({ creatorId }),
+    ]);
+
+    const isEmpty = !latestSnapshot;
+
+    const labels = history.map((h) =>
+        new Date(h.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+    );
+
+    // Reconstruct a followers curve from growth deltas, ending at the latest known total
+    const endFollowers = latestSnapshot?.followers || 0;
+    let running = endFollowers;
+    const followersDesc = [...history].reverse().map((h) => {
+        const val = running;
+        running -= h.followersGrowth || 0;
+        return val;
+    });
+    const followers = followersDesc.reverse();
+
+    const engagement = history.map((h) =>
+        Number((h.engagementRateDelta || 0).toFixed(2))
+    );
+
+    const topPosts = topPostsRaw.map((p) => {
+        const engagementRate = latestSnapshot?.followers
+            ? (((p.likes + p.comments) / latestSnapshot.followers) * 100).toFixed(1) + '%'
+            : '—';
+        return {
+            title: p.caption ? p.caption.slice(0, 60) : `${p.platform} post`,
+            type: p.platform,
+            likes: p.likes,
+            comments: p.comments,
+            views: p.views,
+            engagement: engagementRate,
+            date: p.postedAt
+                ? new Date(p.postedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+                : '',
+        };
+    });
+
     return {
         isLoading: false,
-        isEmpty: false,
+        isEmpty,
         selectedRange: 'Last 30 days',
-        lastUpdated: '25 May 2026, 5:30 PM',
-        profile: {
-            name: 'Aarav Studio',
-            handle: '@aaravstudio',
-            category: 'Digital creator',
-            bio: 'Short-form creator sharing design systems, creator workflows, and behind-the-scenes builds.',
-            avatarInitials: 'AS',
-            followers: '128.4K',
-            following: '642',
-            totalPosts: '318',
-            growthLabel: '+8.6%',
-        },
+        lastUpdated: latestSnapshot?.createdAt
+            ? new Date(latestSnapshot.createdAt).toLocaleString('en-US', {
+                  day: '2-digit',
+                  month: 'short',
+                  year: 'numeric',
+                  hour: 'numeric',
+                  minute: '2-digit',
+              })
+            : '—',
         metrics: [
-            { label: 'Followers', value: '128.4K', change: '+8.6%', tone: 'cyan' },
-            { label: 'Engagement rate', value: '6.82%', change: '+1.2%', tone: 'green' },
-            { label: 'Avg. likes', value: '8.7K', change: '+940', tone: 'blue' },
-            { label: 'Avg. comments', value: '412', change: '+38', tone: 'orange' },
-            { label: 'Posting frequency', value: '5.4/wk', change: 'Consistent', tone: 'violet' },
-            { label: 'Best post', value: '14.9%', change: 'Engagement', tone: 'pink' },
+            { label: 'Followers', value: (latestSnapshot?.followers ?? 0).toLocaleString(), change: '', tone: 'cyan' },
+            { label: 'Engagement rate', value: `${(latestSnapshot?.engagementRate ?? 0).toFixed(2)}%`, change: '', tone: 'green' },
+            { label: 'Total views', value: (latestSnapshot?.totalViews ?? 0).toLocaleString(), change: '', tone: 'blue' },
+            { label: 'Total likes', value: (latestSnapshot?.totalLikes ?? 0).toLocaleString(), change: '', tone: 'orange' },
+            { label: 'Total comments', value: (latestSnapshot?.totalComments ?? 0).toLocaleString(), change: '', tone: 'violet' },
+            { label: 'Total posts', value: postCount.toLocaleString(), change: '', tone: 'pink' },
         ],
         charts: {
-            labels: ['Apr 26', 'May 1', 'May 6', 'May 11', 'May 16', 'May 21', 'May 25'],
-            followers: [113200, 115400, 118900, 120500, 123300, 126100, 128400],
-            engagement: [5.4, 5.9, 6.1, 5.7, 6.4, 6.6, 6.82],
-            posts: ['Launch reel', 'Carousel tips', 'Studio vlog', 'Template drop', 'AMA clip'],
-            postPerformance: [14900, 12100, 9800, 8700, 7600],
+            labels,
+            followers,
+            engagement,
+            posts: topPosts.map((p) => p.title),
+            postPerformance: topPosts.map((p) => p.views),
         },
-        topPosts: [
-            { title: 'How I plan 30 days of content', type: 'Reel', likes: '14.2K', comments: '612', engagement: '14.9%', date: '24 May' },
-            { title: 'Creator OS desk setup walkthrough', type: 'Carousel', likes: '11.8K', comments: '488', engagement: '12.4%', date: '22 May' },
-            { title: '5 hooks that increased watch time', type: 'Reel', likes: '9.6K', comments: '371', engagement: '10.1%', date: '19 May' },
-            { title: 'Behind the scenes: newsletter build', type: 'Post', likes: '7.4K', comments: '284', engagement: '8.7%', date: '16 May' },
-        ],
-        timeline: [
-            { title: 'Top post detected', detail: 'Planning reel crossed 14.9% engagement.', time: 'Today, 4:20 PM' },
-            { title: 'Audience growth spike', detail: 'Followers increased by 2.3K over the last 48 hours.', time: 'Today, 11:10 AM' },
-            { title: 'Weekly consistency check', detail: 'Posting cadence stayed above 5 posts per week.', time: 'Yesterday' },
-            { title: 'Profile snapshot saved', detail: 'Mock analytics snapshot prepared for dashboard UI.', time: '24 May' },
-        ],
+        topPosts,
+        timeline: [],
     };
 }
 
@@ -505,16 +545,19 @@ app.get('/services/:serviceKey', protect, asyncHandler(async (req, res) => {
         return res.redirect('/services/creator-crm');
     }
 
-    if (service.key === 'analytics-dashboard') {
+   if (service.key === 'analytics-dashboard') {
         const userDoc = await User.findById(req.user.id)
             .select('name email')
             .lean();
-
+        const creatorDoc = await Creator.findOne({ userId: req.user.id }).lean();
+        const analytics = creatorDoc
+            ? await buildAnalyticsViewModel(creatorDoc._id)
+            : { isLoading: false, isEmpty: true, metrics: [], charts: { labels: [], followers: [], engagement: [] }, topPosts: [] };
         return res.render('analytics-dashboard', {
             service,
             services,
             user: buildAccountViewModel(userDoc, req.user),
-            analytics: buildAnalyticsViewModel(),
+            analytics,
         });
     }
 
