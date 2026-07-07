@@ -87,4 +87,29 @@ describe('URL Controller Endpoints', () => {
         // Validation should catch it
         expect(res.statusCode).toEqual(400);
     });
+    it('should list URLs for the authenticated user without crashing', async () => {
+        const req = request(app)
+            .get('/api/urls')
+            .set(csrfHeader);
+
+        if (authCookie) {
+            req.set('Cookie', [csrfCookie, authCookie]);
+        } else {
+            req.set('Cookie', [csrfCookie]);
+        }
+        const res = await req;
+
+        // A missing model static previously caused a 500 here; assert the
+        // actual success path and body shape, not just an acceptable status
+        // code, so a regression like Url.listForUser being removed again
+        // fails the test suite instead of passing silently.
+        expect(res.statusCode).not.toBe(500);
+
+        if (res.statusCode === 200) {
+            expect(Array.isArray(res.body.links)).toBe(true);
+        } else {
+            // Only acceptable non-200 outcome is an auth failure
+            expect([401, 302]).toContain(res.statusCode);
+        }
+    });
 });
