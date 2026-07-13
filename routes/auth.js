@@ -271,28 +271,7 @@ router.get("/auth/google/callback", (req, res, next) => {
  *       500:
  *         description: Internal server error
  */
-router.get("/verify-email", (req, res) => {
-    res.render("verify-email", { error: null, success: null, expiredToken: false });
-});
-
-
-/**
- * @swagger
- * /verify-email:
- *   post:
- *     summary: POST request for /verify-email
- *     description: Processes an email verification token to activate a user account.
- *     responses:
- *       200:
- *         description: Successful response
- *       400:
- *         description: Bad request
- *       401:
- *         description: Unauthorized
- *       500:
- *         description: Internal server error
- */
-router.post("/verify-email", emailVerificationLimiter, verifyEmail);
+router.get("/verify-email", emailVerificationLimiter, verifyEmail);
 
 
 /**
