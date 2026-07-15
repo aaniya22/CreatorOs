@@ -266,6 +266,34 @@ class MockUserModel {
     }
 }
 
+// Pre-seed the test user in Mock DB so login works immediately
+(async () => {
+    const hashed = await bcrypt.hash("Password123!", 10);
+    mockUsers.push(new MockUserModel({
+        _id: "000000000000000000000001",
+        name: "Test User",
+        email: "test@local.com",
+        password: hashed,
+        role: "creator",
+        authProvider: "local",
+        alias: "@test_creator",
+        bio: "Test user bio goes here.",
+        twoFactorEnabled: false,
+        isVerified: true,
+        verificationToken: null,
+        verificationTokenExpiry: null,
+        preferences: {
+            appearanceMode: 'light',
+            interfaceDensity: 'tactile',
+            motionEffects: true,
+            soundCues: false,
+            autoSaveLinks: true
+        },
+        createdAt: new Date(),
+        updatedAt: new Date()
+    }));
+})();
+
 function getActiveUserModel() {
     return process.env.USE_MOCK_DB === "true" ? MockUserModel : MongooseUserModel;
 }

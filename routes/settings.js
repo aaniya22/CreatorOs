@@ -375,6 +375,19 @@ router.delete('/account', preventContributorWrites, asyncHandler(async (req, res
     const user = await User.findById(req.user.id);
     if (!user) return res.status(404).json({ error: 'User not found' });
     
+    if (process.env.USE_MOCK_DB === 'true') {
+        // Delete shortened links and collaborator invites associated with the user
+        await Url.deleteMany({ userId: user._id });
+        await Invite.deleteMany({ inviter: user._id });
+
+        if (typeof user.deleteOne === 'function') {
+            await user.deleteOne();
+        }
+
+        res.clearCookie('token');
+        return res.json({ message: 'Account deleted successfully' });
+    }
+
     if (!user.scheduledDeletionAt) {
         return res.status(400).json({ error: 'No account deletion is scheduled. Please request deletion first.' });
     }
